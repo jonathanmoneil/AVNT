@@ -1,0 +1,7 @@
+---
+key_pair: rfks-0
+ami_id: ami-775e4f16
+instance_type: t2.micro
+region: us-west-2
+security_group: default
+vpc_subnet_id: subnet-f09c04a8
