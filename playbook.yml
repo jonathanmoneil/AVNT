@@ -97,20 +97,16 @@
         name: '*'
         state: latest
 
-    - name: Install epel repo
-      yum:
-        name: epel-release
-        state: present
+    - name: download pip bootstrap script
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /opt/get-pip.py
+        mode: 0755
 
-    - name: Install python stuffs
-      yum:
-        name: "{{ item }}"
-        state: latest
-      with_items:
-        - python-devel
-        - python-pip
+    - name: install pip
+      command: "python /opt/get-pip.py"
 
-    - name: Update python-pip
+    - name: Upgrade pip to latest
       pip:
         name: pip
         state: latest
@@ -156,10 +152,10 @@
   become_user: root
   gather_facts: true
   tasks:
-    - name: Install epel release package
+    - name: update system pkgs
       yum:
-        name: epel-release
-        state: present
+        name: '*'
+        state: latest
 
     - name: Add MongoDB Repository
       yum_repository:
@@ -181,13 +177,10 @@
         name: "{{ item }}"
         state: present
       with_items:
-        - ansible
-        - dkms
         - git
         - kernel-devel
         - mongodb-org
         - openssl
-        - python-pip
         - screen
         - vim
 

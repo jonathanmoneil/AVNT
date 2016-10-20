@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ''' Start flask server '''
 
+from flask_conf import *
 from flask import Flask
 from pymongo import MongoClient
 
@@ -13,4 +14,4 @@ def hello():
 @app.route('/query')
 def query_db():
     # query the db for the thing
-    pass
+    db_client = MongoClient(mongo_address)
