@@ -85,6 +85,76 @@
         - "{{ ec2_web.instances }}"
         - "{{ ec2_db.instances }}"
 
+- hosts: db
+  name: configure db
+  user: ec2-user 
+  become: true
+  become_user: root
+  gather_facts: true
+  tasks:
+    - name: update system pkgs
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Add MongoDB Repository
+      yum_repository:
+        name: mongodb
+        description: MongoDB repository
+        file: mongodb-org-3.2
+        baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/
+        gpgcheck: yes
+        enabled: yes
+        gpgkey: https://www.mongodb.org/static/pgp/server-3.2.asc
+
+    - name: Update pkgs
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install basic packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - git
+        - kernel-devel
+
+    - name: Create Mongo directories
+      file:
+        state: directory
+        path: "{{ item }}"
+        owner: mongod
+        group: mongod
+        mode: 0755
+      with_items:
+        - /mongodb
+        - /mongodb/data
+        - /mongodb/logs
+        - /mongodb/ssl
+
+    - name: Touch mongod.log
+      file:
+        state: touch
+        name: /mongod/logs/mongod.log
+        owner: mongod
+        group: mongod
+        mode: 0644
+
+    - name: Install mongo config
+      command: mv /opt/AVNT/db/mongod.conf /mongodb/mongod.conf
+
+    - name: Install systemd unit for mongod
+      command: mv /opt/AVNT/db/mongod.service /usr/lib/systemd/system/mongod.service
+
+    - name: Reload systemd
+      command: "systemctl daemon-reload"
+
+    - name: start mongod
+      service:
+        name: mongod
+        state: started
+
 - hosts: webhosts
   name: configure hosts
   user: ec2-user 
@@ -126,6 +196,11 @@
         state: present
         shell: /bin/bash
 
+    - name: Ensure git is installed
+      yum:
+        name: git
+        state: present
+
     - name: Clone repo to retrieve webserver files
       git:
         repo: https://github.com/jonathanmoneil/AVNT
@@ -133,6 +208,13 @@
 
     - name: copy systemd unit for flask server to systemd dir
       command: mv /opt/AVNT/web/flask.service /usr/lib/systemd/system/flask.service
+
+    - name: Update flask config with db instance details
+      lineinfile:
+        dest: /opt/AVNT/web/conf.py
+        state: present
+        regexp: '^DB_HOST'
+        line: 'DB_HOST = {{ ec2_db.instances.private_ip }}'
 
     - name: chown repo files to flask user
       command: chown -R flask:flask /opt/AVNT/web
@@ -145,71 +227,5 @@
         name: flask
         state: started
 
-- hosts: db
-  name: configure db
-  user: ec2-user 
-  become: true
-  become_user: root
-  gather_facts: true
-  tasks:
-    - name: update system pkgs
-      yum:
-        name: '*'
-        state: latest
-
-    - name: Add MongoDB Repository
-      yum_repository:
-        name: mongodb
-        description: MongoDB repository
-        file: mongodb-org-3.2
-        baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/
-        gpgcheck: yes
-        enabled: yes
-        gpgkey: https://www.mongodb.org/static/pgp/server-3.2.asc
-
-    - name: Update pkgs
-      yum:
-        name: "*"
-        state: latest
-
-    - name: Install basic packages
-      yum:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - git
-        - kernel-devel
-        - mongodb-org
-        - openssl
-        - screen
-        - vim
-
-    - name: Create Mongo directories
-      file:
-        state: directory
-        path: "{{ item }}"
-        owner: mongod
-        group: mongod
-        mode: 0755
-      with_items:
-        - /mongodb
-        - /mongodb/data
-        - /mongodb/logs
-        - /mongodb/ssl
-
-    - name: Touch mongod.log
-      file:
-        state: touch
-        name: /mongod/logs/mongod.log
-        owner: mongod
-        group: mongod
-        mode: 0644
-
-    - name: Install mongo config
-      command: mv /opt/AVNT/db/mongod.conf /mongodb/mongod.conf
-
-    - name: Install systemd unit for mongod
-      command: mv /opt/AVNT/db/mongod.service /usr/lib/systemd/system/mongod.service
-
-    - name: Reload systemd
-      command: "systemctl daemon-reload"
+    - name: Run mongo script
+      command: python /opt/AVNT/web/db.py
