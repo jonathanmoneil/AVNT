@@ -6,13 +6,11 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=/mongodb/mongod.pid
-ExecStart=/usr/bin/mongod --config /mongodb/mongod.conf
+ExecStart=/bin/mongod --config /mongodb/mongod.conf
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 User=mongod
 Group=mongod
-StandardOutput=syslog
-StandardError=syslog
 
 [Install]
 WantedBy=multi-user.target

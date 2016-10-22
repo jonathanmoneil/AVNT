@@ -8,6 +8,11 @@ The ansible playbook creates an elb, two instances that will run the flask appli
 ##### *The config.yml file should be edited prior to running the playbook.*
 
 ```
+# Set up environment vars
+export AWS_ACCESS_KEY_ID='<access_key>'
+export AWS_SECRET_ACCESS_KEY='<secret_key>'
+export AWS_REGION='<aws_region>'
+
 # Set up config.yml
 vi config.yml
 

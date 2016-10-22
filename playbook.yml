@@ -92,33 +92,31 @@
   become_user: root
   gather_facts: true
   tasks:
-    - name: update system pkgs
-      yum:
-        name: '*'
-        state: latest
-
     - name: Add MongoDB Repository
       yum_repository:
         name: mongodb
         description: MongoDB repository
         file: mongodb-org-3.2
-        baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/
+        baseurl: https://repo.mongodb.org/yum/redhat/7/mongodb-org/3.2/x86_64/
         gpgcheck: yes
         enabled: yes
         gpgkey: https://www.mongodb.org/static/pgp/server-3.2.asc
 
-    - name: Update pkgs
-      yum:
-        name: "*"
-        state: latest
+# This takes a long time
+#    - name: Update pkgs
+#      yum:
+#        name: '*'
+#        state: latest
 
-    - name: Install basic packages
+    - name: Install packages
       yum:
         name: "{{ item }}"
         state: present
       with_items:
         - git
         - kernel-devel
+        - mongodb-org
+        - mongodb-org-server
 
     - name: Create Mongo directories
       file:
@@ -132,20 +130,29 @@
         - /mongodb/data
         - /mongodb/logs
         - /mongodb/ssl
+        - /opt/AVNT
 
     - name: Touch mongod.log
       file:
         state: touch
-        name: /mongod/logs/mongod.log
+        name: /mongodb/logs/mongod.log
         owner: mongod
         group: mongod
         mode: 0644
+
+    - name: Clone repo to retrieve db files
+      git:
+        repo: https://github.com/jonathanmoneil/AVNT
+        dest: /opt/AVNT
 
     - name: Install mongo config
       command: mv /opt/AVNT/db/mongod.conf /mongodb/mongod.conf
 
     - name: Install systemd unit for mongod
       command: mv /opt/AVNT/db/mongod.service /usr/lib/systemd/system/mongod.service
+    
+    - name: chown everything to mongod
+      command: chown -R mongod:mongod /mongodb
 
     - name: Reload systemd
       command: "systemctl daemon-reload"
@@ -162,10 +169,11 @@
   become_user: root
   gather_facts: true
   tasks:
-    - name: Update system pkgs
-      yum:
-        name: '*'
-        state: latest
+# This takes a long time
+#    - name: Update system pkgs
+#      yum:
+#        name: '*'
+#        state: latest
 
     - name: download pip bootstrap script
       get_url:
@@ -196,6 +204,14 @@
         state: present
         shell: /bin/bash
 
+    - name: create repo dir
+      file:
+        state: directory
+        owner: flask
+        group: flask
+        mode: 0755
+        path: /opt/AVNT
+
     - name: Ensure git is installed
       yum:
         name: git
@@ -204,7 +220,7 @@
     - name: Clone repo to retrieve webserver files
       git:
         repo: https://github.com/jonathanmoneil/AVNT
-        dest: /opt
+        dest: /opt/AVNT
 
     - name: copy systemd unit for flask server to systemd dir
       command: mv /opt/AVNT/web/flask.service /usr/lib/systemd/system/flask.service
