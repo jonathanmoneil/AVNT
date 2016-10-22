@@ -150,7 +150,10 @@
 
     - name: Install systemd unit for mongod
       command: mv /opt/AVNT/db/mongod.service /usr/lib/systemd/system/mongod.service
-    
+
+    - name: disable selinux or we can't proceed
+      command: setenforce 0
+
     - name: chown everything to mongod
       command: chown -R mongod:mongod /mongodb
 
@@ -237,6 +240,9 @@
 
     - name: reload systemd
       command: systemctl daemon-reload
+
+    - name: disable selinux or we cant start the daemon
+      command: setenforce 0
 
     - name: start flask server
       service:
