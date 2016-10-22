@@ -28,7 +28,7 @@ ansible-playbook playbook.yml
 # and do these final steps to access the db. 
 
 # From the first web machine:
-sed -i 's/DB_HOST = /DB_HOST = '<private_ip>'/g' /opt/AVNT/web/conf.py
+sed -i 's/DB_HOST = /DB_HOST = "<private_ip>"/g' /opt/AVNT/web/conf.py
 python /opt/AVNT/web/db.py
 systemctl restart flask
 
