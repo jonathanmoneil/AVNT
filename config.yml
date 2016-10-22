@@ -1,7 +1,12 @@
 ---
-key_pair: rfks-0
+# Set the name of the keypair to use
+key_pair: 
+# This defaults to the AWS RHEL AMI
 ami_id: ami-775e4f16
 instance_type: t2.micro
+# Change region if necessary
 region: us-west-2
+# Set the security group to use
 security_group: default
-vpc_subnet_id: subnet-f09c04a8
+# Set the VPC subnet ID to use (This assumes default VPC)
+vpc_subnet_id: 

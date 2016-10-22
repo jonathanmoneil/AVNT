@@ -30,6 +30,8 @@ ansible-playbook playbook.yml
 # From the first web machine:
 sed -i 's/DB_HOST = /DB_HOST = '<private_ip>'/g' /opt/AVNT/web/conf.py
 python /opt/AVNT/web/db.py
+systemctl restart flask
 
-# From the 2nd machine only the sed command is required.
+# From the 2nd machine only the sed command then the flask restart is required.
+
 ```
