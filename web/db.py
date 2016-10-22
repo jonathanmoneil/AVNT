@@ -32,7 +32,7 @@ def update_views():
     db_client = _connect_db()
     current_views = json.loads(db_client.DB_COLLECTION.find_one())
     current_views['views'] = current_views['views'] + 1
-    updated_views = db_client.DB_COLLECTION.update_one(current_views)
+    updated_views = db_client.DB_COLLECTION.update_one(json.dumps(current_views))
     return
 
 def query_db():

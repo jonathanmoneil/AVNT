@@ -2,8 +2,8 @@
 ''' Start flask server '''
 
 from conf import *
-from db import update_views, query_db
-from flask import Flask, render_template
+from db import query_db
+from flask import Flask
 
 
 app = Flask(__name__)
@@ -14,13 +14,9 @@ def render_index():
 
 @app.route('/db')
 def db_results():
-    update_views()
-    query_result = query_db() 
-    if query_result is None:
-        result = 'Unable to find data in the database!'
-        return result
-    else: 
-        return query_result
+    query_result = query_db()
+    result_str = ''.join('{}: {}\n'.format(key, val) for key, val in query_result.items())
+    return result_str
     
     
 if __name__ == '__main__':

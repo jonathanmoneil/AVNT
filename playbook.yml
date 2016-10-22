@@ -55,6 +55,12 @@
       with_items:
         - '{{ ec2_db.instances }}'
 
+    - name: store db private_ip
+      set_fact:
+        db_ip: "{{ item.private_ip }}"
+      with_items:
+        - "{{ ec2_db.instances }}"
+
     - name: Provision ELB
       local_action:
         module: ec2_elb_lb
@@ -200,18 +206,11 @@
         - flask
         - pymongo
 
-    - name: Create flask user
-      user:
-        name: flask
-        group: flask
-        state: present
-        shell: /bin/bash
-
     - name: create repo dir
       file:
         state: directory
-        owner: flask
-        group: flask
+        owner: root
+        group: root
         mode: 0755
         path: /opt/AVNT
 
@@ -228,16 +227,6 @@
     - name: copy systemd unit for flask server to systemd dir
       command: mv /opt/AVNT/web/flask.service /usr/lib/systemd/system/flask.service
 
-    - name: Update flask config with db instance details
-      lineinfile:
-        dest: /opt/AVNT/web/conf.py
-        state: present
-        regexp: '^DB_HOST'
-        line: 'DB_HOST = {{ ec2_db.instances.private_ip }}'
-
-    - name: chown repo files to flask user
-      command: chown -R flask:flask /opt/AVNT/web
-
     - name: reload systemd
       command: systemctl daemon-reload
 
@@ -248,6 +237,3 @@
       service:
         name: flask
         state: started
-
-    - name: Run mongo script
-      command: python /opt/AVNT/web/db.py

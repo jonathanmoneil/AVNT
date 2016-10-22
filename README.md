@@ -20,4 +20,16 @@ vi config.yml
 ansible-playbook playbook.yml
 
 # Grab some coffee
+
+# Once the servers are provisioned, you can use everything but the DB. 
+# In order to set up the DB, IAM roles would need to be created so that 
+# the web instances could discover the db instance private_ip.
+# Since this is not the case here, we have to manually log into the machines
+# and do these final steps to access the db. 
+
+# From the first web machine:
+sed -i 's/DB_HOST = /DB_HOST = '<private_ip>'/g' /opt/AVNT/web/conf.py
+python /opt/AVNT/web/db.py
+
+# From the 2nd machine only the sed command is required.
 ```
